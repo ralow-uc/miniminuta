@@ -54,6 +54,8 @@ import androidx.compose.ui.unit.dp
 import com.miniminuta.app.ui.components.AnchoMaximoFormulario
 import com.miniminuta.app.ui.components.BotonPrimario
 import com.miniminuta.app.ui.components.CampoTexto
+import com.miniminuta.app.ui.components.GrillaSeleccionMultiple
+import com.miniminuta.app.ui.components.TablaDatos
 import com.miniminuta.app.ui.components.TituloSeccion
 import com.miniminuta.app.ui.components.Vinculo
 import com.miniminuta.app.ui.theme.MiniMinutaTheme
@@ -72,7 +74,12 @@ private val TIPOS_DIETA = listOf(
 private val TAMANOS_HOGAR = listOf("1 o 2 personas", "3 o 4 personas", "5 o más personas")
 
 /** Opciones del check list de restricciones alimentarias. */
-private val RESTRICCIONES = listOf("Sin gluten", "Sin lactosa", "Sin frutos secos")
+private val RESTRICCIONES = listOf(
+    "Sin gluten",
+    "Sin lactosa",
+    "Sin frutos secos",
+    "Bajo en sodio"
+)
 
 /**
  * Pantalla de registro de usuario.
@@ -256,37 +263,19 @@ fun RegistroScreen(
                     }
                 }
 
-                // Check list de restricciones alimentarias.
+                // Check list de restricciones, presentado como grilla de dos columnas.
                 TituloSeccion("¿Tienes alguna restricción?")
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    RESTRICCIONES.forEach { opcion ->
-                        val marcada = opcion in restriccionesElegidas
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 52.dp)
-                                .toggleable(
-                                    value = marcada,
-                                    onValueChange = { activada ->
-                                        restriccionesElegidas = if (activada) {
-                                            restriccionesElegidas + opcion
-                                        } else {
-                                            restriccionesElegidas - opcion
-                                        }
-                                    },
-                                    role = Role.Checkbox
-                                )
-                        ) {
-                            Checkbox(checked = marcada, onCheckedChange = null)
-                            Text(
-                                text = opcion,
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(start = 12.dp)
-                            )
+                GrillaSeleccionMultiple(
+                    opciones = RESTRICCIONES,
+                    seleccionadas = restriccionesElegidas,
+                    onCambiaSeleccion = { opcion, activada ->
+                        restriccionesElegidas = if (activada) {
+                            restriccionesElegidas + opcion
+                        } else {
+                            restriccionesElegidas - opcion
                         }
                     }
-                }
+                )
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -306,6 +295,23 @@ fun RegistroScreen(
                         modifier = Modifier.padding(start = 12.dp)
                     )
                 }
+
+                TituloSeccion("Resumen de tu registro")
+                TablaDatos(
+                    encabezadoIzquierdo = "Dato",
+                    encabezadoDerecho = "Lo que elegiste",
+                    filas = listOf(
+                        "Nombre" to nombre.ifBlank { "Sin completar" },
+                        "Correo" to email.ifBlank { "Sin completar" },
+                        "Alimentación" to tipoDieta,
+                        "Personas" to tamanoHogar,
+                        "Restricciones" to if (restriccionesElegidas.isEmpty()) {
+                            "Ninguna"
+                        } else {
+                            restriccionesElegidas.joinToString(", ")
+                        }
+                    )
+                )
 
                 BotonPrimario(
                     texto = "Crear mi cuenta",

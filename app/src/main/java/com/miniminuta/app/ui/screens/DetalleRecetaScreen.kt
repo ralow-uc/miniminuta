@@ -1,6 +1,5 @@
 package com.miniminuta.app.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +13,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +23,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.miniminuta.app.data.Receta
@@ -33,6 +30,7 @@ import com.miniminuta.app.data.RecetasRepository
 import com.miniminuta.app.ui.components.BotonSecundario
 import com.miniminuta.app.ui.components.EtiquetaDia
 import com.miniminuta.app.ui.components.FilaDato
+import com.miniminuta.app.ui.components.TablaDatos
 import com.miniminuta.app.ui.components.TituloSeccion
 import com.miniminuta.app.ui.theme.MiniMinutaTheme
 
@@ -142,7 +140,16 @@ fun DetalleRecetaScreen(
             }
 
             TituloSeccion("Información nutricional por porción")
-            TablaNutricional(receta = receta)
+            TablaDatos(
+                encabezadoIzquierdo = "Nutriente",
+                encabezadoDerecho = "Cantidad",
+                filas = listOf(
+                    "Calorías" to "${receta.nutricion.calorias} kcal",
+                    "Proteínas" to "${receta.nutricion.proteinas} g",
+                    "Carbohidratos" to "${receta.nutricion.carbohidratos} g",
+                    "Grasas" to "${receta.nutricion.grasas} g"
+                )
+            )
 
             Card(
                 colors = CardDefaults.cardColors(
@@ -173,73 +180,6 @@ fun DetalleRecetaScreen(
                 icono = Icons.AutoMirrored.Filled.ArrowBack,
                 onClick = onVolver
             )
-        }
-    }
-}
-
-/**
- * Tabla de dos columnas con los valores nutricionales de la receta.
- */
-@Composable
-private fun TablaNutricional(
-    receta: Receta,
-    modifier: Modifier = Modifier
-) {
-    val filas = listOf(
-        "Calorías" to "${receta.nutricion.calorias} kcal",
-        "Proteínas" to "${receta.nutricion.proteinas} g",
-        "Carbohidratos" to "${receta.nutricion.carbohidratos} g",
-        "Grasas" to "${receta.nutricion.grasas} g"
-    )
-
-    Card(
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Nutriente",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = "Cantidad",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-
-            filas.forEachIndexed { indice, (nutriente, cantidad) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(text = nutriente, style = MaterialTheme.typography.bodyLarge)
-                    Text(
-                        text = cantidad,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                if (indice < filas.lastIndex) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-                }
-            }
         }
     }
 }

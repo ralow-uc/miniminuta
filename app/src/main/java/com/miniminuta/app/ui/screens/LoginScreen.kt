@@ -16,8 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -41,14 +39,26 @@ import com.miniminuta.app.ui.components.AnchoMaximoFormulario
 import com.miniminuta.app.ui.components.BotonPrimario
 import com.miniminuta.app.ui.components.CampoTexto
 import com.miniminuta.app.ui.components.EncabezadoApp
+import com.miniminuta.app.ui.components.GrillaInformativa
+import com.miniminuta.app.ui.components.ItemInformativo
+import com.miniminuta.app.ui.components.TablaDatos
 import com.miniminuta.app.ui.components.Vinculo
 import com.miniminuta.app.ui.theme.MiniMinutaTheme
+import com.miniminuta.app.ui.components.TituloSeccion
 import com.miniminuta.app.util.Validaciones
 import kotlinx.coroutines.launch
 
 /** Credenciales de demostración, ya que esta entrega no contempla servidor. */
 private const val EMAIL_DEMO = "maria@correo.com"
 private const val PASSWORD_DEMO = "minuta123"
+
+/** Contenido de la grilla de bienvenida que se muestra bajo el formulario. */
+private val BENEFICIOS = listOf(
+    ItemInformativo("📅", "5 recetas", "Una para cada día de la semana"),
+    ItemInformativo("🥕", "Ingredientes", "La lista completa de cada plato"),
+    ItemInformativo("👩‍🍳", "Paso a paso", "Instrucciones simples y ordenadas"),
+    ItemInformativo("💚", "Aporte nutricional", "Calorías y recomendación de cada receta")
+)
 
 /**
  * Pantalla de inicio de sesión.
@@ -164,41 +174,21 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                TarjetaAyudaDemo()
-            }
-        }
-    }
-}
+                TituloSeccion("¿Qué encontrarás en la aplicación?")
 
-/** Recuadro con las credenciales de prueba para revisar la aplicación. */
-@Composable
-private fun TarjetaAyudaDemo(modifier: Modifier = Modifier) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        ),
-        shape = MaterialTheme.shapes.medium,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = "Datos de prueba",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
-            Text(
-                text = "Correo: $EMAIL_DEMO",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
-            Text(
-                text = "Contraseña: $PASSWORD_DEMO",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
+                GrillaInformativa(items = BENEFICIOS)
+
+                TituloSeccion("Datos de prueba")
+
+                TablaDatos(
+                    encabezadoIzquierdo = "Dato",
+                    encabezadoDerecho = "Valor",
+                    filas = listOf(
+                        "Correo" to EMAIL_DEMO,
+                        "Contraseña" to PASSWORD_DEMO
+                    )
+                )
+            }
         }
     }
 }

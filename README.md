@@ -50,17 +50,23 @@ demostración:
 
 ## Componentes de interfaz utilizados
 
-| Componente | Ubicación |
-|---|---|
-| Campos de entrada | Login, Registro, Recuperar contraseña |
-| Botones | Todas las pantallas (`Button`, `OutlinedButton`, `TextButton`) |
-| Combo box | Registro, selector de tipo de alimentación |
-| Radio buttons | Registro, cantidad de personas del hogar. Recuperar, medio de envío |
-| Check list | Registro, restricciones alimentarias y aceptación de términos |
-| Vínculos | Login y Registro |
-| Textos | Títulos, descripciones y mensajes de ayuda |
-| Grilla | Minuta, `LazyVerticalGrid` con las recetas |
-| Tabla | Detalle de receta, información nutricional por porción |
+Las tres vistas de acceso integran el catálogo completo de componentes que
+pide la actividad:
+
+| Componente | Login | Registro | Recuperar contraseña |
+|---|---|---|---|
+| Input | Correo y contraseña | Nombre, correo y contraseñas | Correo |
+| Botones | Ingresar | Crear mi cuenta | Enviar instrucciones |
+| Vínculos | Recuperar y crear cuenta | Volver al inicio | Volver al inicio |
+| Textos | Título, bajada y ayudas | Títulos de sección y ayudas | Instrucciones y ayudas |
+| Combo box | | Tipo de alimentación | |
+| Radio buttons | | Personas del hogar | Medio de envío |
+| Check list | Recordar mi correo | Restricciones y términos | |
+| Grilla | Qué encontrarás en la aplicación | Restricciones alimentarias | Medio de envío |
+| Tabla | Datos de prueba | Resumen del registro | Pasos del proceso |
+
+Además, la vista Minuta usa una grilla (`LazyVerticalGrid`) para las recetas y
+la vista Detalle de receta usa una tabla para la información nutricional.
 
 ## Adaptabilidad
 
