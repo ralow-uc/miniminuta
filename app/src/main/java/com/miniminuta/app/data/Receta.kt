@@ -12,11 +12,13 @@ data class InfoNutricional(
 )
 
 /**
- * Receta de un dia de la minuta semanal.
+ * Receta del catálogo.
+ *
+ * La receta no conoce el día en que se cocina: un mismo plato puede asignarse
+ * a cualquier día de la semana. Esa relación la guarda [DiaMinuta].
  */
 data class Receta(
     val id: Int,
-    val dia: String,
     val nombre: String,
     val descripcion: String,
     val tiempoMinutos: Int,
@@ -25,4 +27,12 @@ data class Receta(
     val ingredientes: List<String>,
     val preparacion: List<String>,
     val nutricion: InfoNutricional
+)
+
+/**
+ * Un día de la minuta semanal con la receta que la usuaria eligió cocinar.
+ */
+data class DiaMinuta(
+    val dia: String,
+    val receta: Receta
 )

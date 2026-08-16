@@ -1,5 +1,7 @@
 package com.miniminuta.app.navigation
 
+import android.net.Uri
+
 /**
  * Rutas de navegación de la aplicación.
  */
@@ -9,9 +11,12 @@ object Rutas {
     const val RECUPERAR = "recuperar"
     const val MINUTA = "minuta"
 
-    /** El detalle recibe el identificador de la receta como argumento. */
-    const val DETALLE = "detalle/{recetaId}"
-    const val ARG_RECETA_ID = "recetaId"
+    /** El detalle y el selector reciben el día de la minuta como argumento. */
+    const val DETALLE = "detalle/{dia}"
+    const val SELECCION = "seleccion/{dia}"
+    const val ARG_DIA = "dia"
 
-    fun detalleDe(recetaId: Int): String = "detalle/$recetaId"
+    fun detalleDe(dia: String): String = "detalle/${Uri.encode(dia)}"
+
+    fun seleccionDe(dia: String): String = "seleccion/${Uri.encode(dia)}"
 }

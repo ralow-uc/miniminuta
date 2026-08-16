@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,8 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.miniminuta.app.data.Receta
+import com.miniminuta.app.data.DiaMinuta
 import com.miniminuta.app.data.RecetasRepository
+import com.miniminuta.app.ui.components.BotonPrimario
 import com.miniminuta.app.ui.components.BotonSecundario
 import com.miniminuta.app.ui.components.EtiquetaDia
 import com.miniminuta.app.ui.components.FilaDato
@@ -41,14 +43,17 @@ import com.miniminuta.app.ui.theme.MiniMinutaTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetalleRecetaScreen(
-    receta: Receta,
+    diaMinuta: DiaMinuta,
     onVolver: () -> Unit,
+    onCambiarReceta: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val receta = diaMinuta.receta
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(receta.dia) },
+                title = { Text(diaMinuta.dia) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -79,7 +84,7 @@ fun DetalleRecetaScreen(
             ) {
                 Text(text = receta.emoji, style = MaterialTheme.typography.displaySmall)
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    EtiquetaDia(dia = receta.dia)
+                    EtiquetaDia(dia = diaMinuta.dia)
                     Text(
                         text = receta.nombre,
                         style = MaterialTheme.typography.headlineSmall
@@ -175,6 +180,12 @@ fun DetalleRecetaScreen(
                 }
             }
 
+            BotonPrimario(
+                texto = "Cambiar esta receta",
+                icono = Icons.Filled.SwapHoriz,
+                onClick = onCambiarReceta
+            )
+
             BotonSecundario(
                 texto = "Volver a la minuta",
                 icono = Icons.AutoMirrored.Filled.ArrowBack,
@@ -189,8 +200,9 @@ fun DetalleRecetaScreen(
 private fun DetalleRecetaScreenPreview() {
     MiniMinutaTheme {
         DetalleRecetaScreen(
-            receta = RecetasRepository.obtenerMinutaSemanal().first(),
-            onVolver = {}
+            diaMinuta = RecetasRepository.obtenerMinutaInicial().first(),
+            onVolver = {},
+            onCambiarReceta = {}
         )
     }
 }

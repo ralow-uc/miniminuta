@@ -3,30 +3,35 @@ package com.miniminuta.app.navigation
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.miniminuta.app.data.RecetasRepository
+import com.miniminuta.app.ui.MinutaViewModel
 import com.miniminuta.app.ui.screens.DetalleRecetaScreen
 import com.miniminuta.app.ui.screens.LoginScreen
 import com.miniminuta.app.ui.screens.MinutaScreen
 import com.miniminuta.app.ui.screens.RecuperarPasswordScreen
 import com.miniminuta.app.ui.screens.RegistroScreen
+import com.miniminuta.app.ui.screens.SeleccionRecetaScreen
 
 /**
  * Grafo de navegación de la aplicación.
  *
  * Cada pantalla recibe funciones de navegación en lugar del NavHostController,
  * de manera que las pantallas se puedan previsualizar y probar por separado.
+ * El estado de la minuta vive en un ViewModel compartido, para que la receta
+ * que la usuaria elija en un día siga vigente al moverse entre pantallas.
  */
 @Composable
 fun AppNavGraph(
     anchoPantalla: WindowWidthSizeClass,
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    minutaViewModel: MinutaViewModel = viewModel()
 ) {
     NavHost(
         navController = navController,
@@ -62,10 +67,13 @@ fun AppNavGraph(
 
         composable(Rutas.MINUTA) {
             MinutaScreen(
-                recetas = RecetasRepository.obtenerMinutaSemanal(),
+                minuta = minutaViewModel.minuta,
                 anchoPantalla = anchoPantalla,
-                onVerReceta = { receta ->
-                    navController.navigate(Rutas.detalleDe(receta.id))
+                onVerReceta = { diaMinuta ->
+                    navController.navigate(Rutas.detalleDe(diaMinuta.dia))
+                },
+                onCambiarReceta = { diaMinuta ->
+                    navController.navigate(Rutas.seleccionDe(diaMinuta.dia))
                 },
                 onCerrarSesion = {
                     navController.navigate(Rutas.LOGIN) {
@@ -77,17 +85,41 @@ fun AppNavGraph(
 
         composable(
             route = Rutas.DETALLE,
-            arguments = listOf(navArgument(Rutas.ARG_RECETA_ID) { type = NavType.IntType })
+            arguments = listOf(navArgument(Rutas.ARG_DIA) { type = NavType.StringType })
         ) { entradaPila ->
-            val recetaId = entradaPila.arguments?.getInt(Rutas.ARG_RECETA_ID) ?: 0
-            val receta = RecetasRepository.obtenerPorId(recetaId)
-            if (receta == null) {
-                // Si el identificador no existe se vuelve a la minuta en vez de
-                // dejar la pantalla en blanco.
+            val dia = entradaPila.arguments?.getString(Rutas.ARG_DIA).orEmpty()
+            val diaMinuta = minutaViewModel.obtenerDia(dia)
+            if (diaMinuta == null) {
+                // Si el día no existe se vuelve a la minuta en vez de dejar la
+                // pantalla en blanco.
                 navController.popBackStack()
             } else {
                 DetalleRecetaScreen(
-                    receta = receta,
+                    diaMinuta = diaMinuta,
+                    onVolver = { navController.popBackStack() },
+                    onCambiarReceta = { navController.navigate(Rutas.seleccionDe(dia)) }
+                )
+            }
+        }
+
+        composable(
+            route = Rutas.SELECCION,
+            arguments = listOf(navArgument(Rutas.ARG_DIA) { type = NavType.StringType })
+        ) { entradaPila ->
+            val dia = entradaPila.arguments?.getString(Rutas.ARG_DIA).orEmpty()
+            val diaMinuta = minutaViewModel.obtenerDia(dia)
+            if (diaMinuta == null) {
+                navController.popBackStack()
+            } else {
+                SeleccionRecetaScreen(
+                    dia = dia,
+                    catalogo = minutaViewModel.catalogo,
+                    recetaActualId = diaMinuta.receta.id,
+                    anchoPantalla = anchoPantalla,
+                    onConfirmar = { recetaId ->
+                        minutaViewModel.cambiarReceta(dia = dia, recetaId = recetaId)
+                        navController.popBackStack()
+                    },
                     onVolver = { navController.popBackStack() }
                 )
             }

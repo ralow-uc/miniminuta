@@ -1,8 +1,9 @@
 # MiniMinuta
 
 Aplicación móvil Android que entrega una minuta nutricional semanal de recetas.
-El usuario revisa las cinco recetas de la semana, entra al detalle de cada una y
-consulta sus ingredientes, la preparación paso a paso y la tabla nutricional.
+La usuaria revisa las cinco recetas de la semana, entra al detalle de cada una
+para ver ingredientes, preparación paso a paso y tabla nutricional, y puede
+cambiar la receta de cualquier día por otra del catálogo.
 
 La interfaz está pensada para personas con poca experiencia en el uso de
 celulares: botones grandes, textos amplios, un objetivo por pantalla y mensajes
@@ -45,8 +46,9 @@ demostración:
 | Login | Ingreso con correo y contraseña, opción de recordar el correo y vínculos a registro y recuperación. |
 | Registro | Datos personales y preferencias alimentarias del hogar. |
 | Recuperar contraseña | Envío simulado de instrucciones al correo del usuario. |
-| Minuta | Grilla con las cinco recetas de la semana y un resumen de la semana. |
+| Minuta | Grilla con las cinco recetas de la semana y un resumen que se recalcula al cambiar una receta. |
 | Detalle de receta | Ingredientes, preparación, tabla nutricional y recomendación. |
+| Elegir receta | Catálogo completo para reemplazar la receta de un día determinado. |
 
 ## Componentes de interfaz utilizados
 
@@ -65,8 +67,22 @@ pide la actividad:
 | Grilla | Qué encontrarás en la aplicación | Restricciones alimentarias | Medio de envío |
 | Tabla | Datos de prueba | Resumen del registro | Pasos del proceso |
 
-Además, la vista Minuta usa una grilla (`LazyVerticalGrid`) para las recetas y
-la vista Detalle de receta usa una tabla para la información nutricional.
+Además, la vista Minuta y la de Elegir receta usan grillas (`LazyVerticalGrid`)
+y la vista Detalle de receta usa una tabla para la información nutricional.
+
+## Minuta editable
+
+La minuta no es fija. Cada día tiene un botón para cambiar la receta, que abre
+el catálogo completo con la receta actual marcada. Al guardar, la minuta y el
+resumen de la semana se actualizan de inmediato.
+
+El estado vive en `MinutaViewModel`, compartido por las pantallas de minuta,
+detalle y selección. Así la elección se mantiene al navegar y sobrevive a los
+giros de pantalla. No se guarda en disco: al cerrar la aplicación la minuta
+vuelve a su estado inicial.
+
+La misma receta puede repetirse en más de un día, porque no hay motivo para
+impedirlo.
 
 ## Adaptabilidad
 
@@ -80,10 +96,11 @@ y todas las pantallas admiten desplazamiento vertical.
 ```
 app/src/main/java/com/miniminuta/app/
 ├── MainActivity.kt          Actividad única, aplica el tema y calcula el tamaño de ventana
-├── data/                    Modelo de receta y arreglo con la minuta semanal
+├── data/                    Modelo de receta, catálogo y minuta semanal inicial
 ├── navigation/              Rutas y grafo de navegación
+├── ui/MinutaViewModel.kt    Estado de la minuta y cambio de receta por día
 ├── ui/components/           Componentes reutilizables de interfaz
-├── ui/screens/              Las cinco pantallas de la aplicación
+├── ui/screens/              Las seis pantallas de la aplicación
 ├── ui/theme/                Colores, tipografía y tema
 └── util/                    Reglas de validación de formularios
 ```
@@ -94,5 +111,5 @@ app/src/main/java/com/miniminuta/app/
 ./gradlew testDebugUnitTest
 ```
 
-Cubren las reglas de validación de los formularios y la consistencia del
-arreglo de recetas.
+Cubren las reglas de validación de los formularios, la consistencia del
+catálogo de recetas y el cambio de receta por día.

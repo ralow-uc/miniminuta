@@ -30,7 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.miniminuta.app.data.Receta
+import com.miniminuta.app.data.DiaMinuta
 import com.miniminuta.app.data.RecetasRepository
 import com.miniminuta.app.ui.components.TarjetaReceta
 import com.miniminuta.app.ui.theme.MiniMinutaTheme
@@ -44,9 +44,10 @@ import com.miniminuta.app.ui.theme.MiniMinutaTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MinutaScreen(
-    recetas: List<Receta>,
+    minuta: List<DiaMinuta>,
     anchoPantalla: WindowWidthSizeClass,
-    onVerReceta: (Receta) -> Unit,
+    onVerReceta: (DiaMinuta) -> Unit,
+    onCambiarReceta: (DiaMinuta) -> Unit,
     onCerrarSesion: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -82,16 +83,21 @@ fun MinutaScreen(
                 .padding(padding)
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                ResumenSemana(recetas = recetas)
+                ResumenSemana(minuta = minuta)
             }
 
-            items(items = recetas, key = { it.id }) { receta ->
-                TarjetaReceta(receta = receta, onClick = { onVerReceta(receta) })
+            items(items = minuta, key = { it.dia }) { diaMinuta ->
+                TarjetaReceta(
+                    diaMinuta = diaMinuta,
+                    onClick = { onVerReceta(diaMinuta) },
+                    onCambiar = { onCambiarReceta(diaMinuta) }
+                )
             }
 
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Text(
-                    text = "Toca una receta para ver los ingredientes y la preparación.",
+                    text = "Toca una receta para ver los ingredientes y la preparación, " +
+                        "o cambia la del día por otra del catálogo.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -107,9 +113,10 @@ fun MinutaScreen(
 /** Tarjeta de resumen con el total de recetas y el promedio de calorías. */
 @Composable
 private fun ResumenSemana(
-    recetas: List<Receta>,
+    minuta: List<DiaMinuta>,
     modifier: Modifier = Modifier
 ) {
+    val recetas = minuta.map { it.receta }
     val promedioCalorias = if (recetas.isEmpty()) {
         0
     } else {
@@ -141,7 +148,7 @@ private fun ResumenSemana(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                DatoResumen(valor = "${recetas.size}", etiqueta = "recetas")
+                DatoResumen(valor = "${minuta.size}", etiqueta = "recetas")
                 DatoResumen(valor = "$promedioCalorias", etiqueta = "kcal promedio")
                 DatoResumen(valor = "$tiempoPromedio min", etiqueta = "de preparación")
             }
@@ -177,9 +184,10 @@ private fun DatoResumen(
 private fun MinutaScreenPreview() {
     MiniMinutaTheme {
         MinutaScreen(
-            recetas = RecetasRepository.obtenerMinutaSemanal(),
+            minuta = RecetasRepository.obtenerMinutaInicial(),
             anchoPantalla = WindowWidthSizeClass.Compact,
             onVerReceta = {},
+            onCambiarReceta = {},
             onCerrarSesion = {}
         )
     }
