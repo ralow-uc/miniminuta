@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -15,12 +16,15 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,6 +34,7 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -37,9 +42,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.miniminuta.app.data.DiaSemana
+import com.miniminuta.app.data.OrdenCatalogo
 import com.miniminuta.app.data.Receta
 import com.miniminuta.app.data.RecetasRepository
+import com.miniminuta.app.data.buscar
+import com.miniminuta.app.data.nivelCalorico
+import com.miniminuta.app.data.ordenarPor
 import com.miniminuta.app.ui.components.BotonPrimario
+import com.miniminuta.app.ui.components.GrillaSeleccionUnica
 import com.miniminuta.app.ui.theme.MiniMinutaTheme
 
 /**
@@ -51,7 +62,7 @@ import com.miniminuta.app.ui.theme.MiniMinutaTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SeleccionRecetaScreen(
-    dia: String,
+    dia: DiaSemana,
     catalogo: List<Receta>,
     recetaActualId: Int,
     anchoPantalla: WindowWidthSizeClass,
@@ -60,12 +71,18 @@ fun SeleccionRecetaScreen(
     modifier: Modifier = Modifier
 ) {
     var elegidaId by rememberSaveable { mutableIntStateOf(recetaActualId) }
+    var busqueda by rememberSaveable { mutableStateOf("") }
+    var orden by rememberSaveable { mutableStateOf(OrdenCatalogo.NOMBRE) }
     val columnas = if (anchoPantalla == WindowWidthSizeClass.Compact) 1 else 2
+
+    // Las dos funciones de extensión se encadenan: primero se filtra por texto
+    // y luego se ordena según el criterio elegido.
+    val recetasVisibles = catalogo.buscar(busqueda).ordenarPor(orden)
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Receta del $dia") },
+                title = { Text("Receta del ${dia.etiqueta}") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -101,14 +118,62 @@ fun SeleccionRecetaScreen(
                 .padding(padding)
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                Text(
-                    text = "Toca la receta que quieres cocinar el $dia y luego guarda.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "Toca la receta que quieres cocinar el ${dia.etiqueta} y luego guarda.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    OutlinedTextField(
+                        value = busqueda,
+                        onValueChange = { busqueda = it },
+                        label = { Text("Buscar receta o ingrediente") },
+                        singleLine = true,
+                        leadingIcon = {
+                            Icon(imageVector = Icons.Filled.Search, contentDescription = null)
+                        },
+                        trailingIcon = {
+                            if (busqueda.isNotEmpty()) {
+                                IconButton(onClick = { busqueda = "" }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Close,
+                                        contentDescription = "Borrar la búsqueda"
+                                    )
+                                }
+                            }
+                        },
+                        textStyle = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 68.dp)
+                    )
+
+                    Text(
+                        text = "Ordenar por",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    GrillaSeleccionUnica(
+                        opciones = OrdenCatalogo.entries,
+                        seleccionada = orden,
+                        etiqueta = { it.etiqueta },
+                        onSelecciona = { orden = it }
+                    )
+
+                    Text(
+                        text = if (recetasVisibles.isEmpty()) {
+                            "Ninguna receta coincide con la búsqueda."
+                        } else {
+                            "${recetasVisibles.size} de ${catalogo.size} recetas"
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
-            items(items = catalogo, key = { it.id }) { receta ->
+            items(items = recetasVisibles, key = { it.id }) { receta ->
                 TarjetaOpcionReceta(
                     receta = receta,
                     elegida = receta.id == elegidaId,
@@ -165,9 +230,8 @@ private fun TarjetaOpcionReceta(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "${receta.tiempoMinutos} minutos  ·  " +
-                        "${receta.nutricion.calorias} kcal  ·  " +
-                        "${receta.porciones} porciones",
+                    text = "${receta.tiempoMinutos} min  ·  ${receta.nutricion.calorias} kcal  ·  " +
+                        receta.nivelCalorico().etiqueta,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -181,7 +245,7 @@ private fun TarjetaOpcionReceta(
 private fun SeleccionRecetaScreenPreview() {
     MiniMinutaTheme {
         SeleccionRecetaScreen(
-            dia = "Lunes",
+            dia = DiaSemana.LUNES,
             catalogo = RecetasRepository.obtenerCatalogo(),
             recetaActualId = 1,
             anchoPantalla = WindowWidthSizeClass.Compact,

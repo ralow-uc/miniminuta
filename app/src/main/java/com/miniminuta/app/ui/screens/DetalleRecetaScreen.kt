@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.miniminuta.app.data.DiaMinuta
 import com.miniminuta.app.data.RecetasRepository
+import com.miniminuta.app.data.nivelCalorico
 import com.miniminuta.app.ui.components.BotonPrimario
 import com.miniminuta.app.ui.components.BotonSecundario
 import com.miniminuta.app.ui.components.EtiquetaDia
@@ -53,7 +54,7 @@ fun DetalleRecetaScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(diaMinuta.dia) },
+                title = { Text(diaMinuta.dia.etiqueta) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -111,6 +112,7 @@ fun DetalleRecetaScreen(
                 ) {
                     FilaDato("Tiempo de preparación", "${receta.tiempoMinutos} minutos")
                     FilaDato("Rinde para", "${receta.porciones} personas")
+                    FilaDato("Carga calórica", receta.nivelCalorico().etiqueta)
                 }
             }
 
@@ -152,7 +154,8 @@ fun DetalleRecetaScreen(
                     "Calorías" to "${receta.nutricion.calorias} kcal",
                     "Proteínas" to "${receta.nutricion.proteinas} g",
                     "Carbohidratos" to "${receta.nutricion.carbohidratos} g",
-                    "Grasas" to "${receta.nutricion.grasas} g"
+                    "Grasas" to "${receta.nutricion.grasas} g",
+                    "Total de macros" to "${receta.nutricion.totalMacros} g"
                 )
             )
 

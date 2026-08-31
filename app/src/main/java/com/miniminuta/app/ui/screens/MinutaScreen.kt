@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +32,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.miniminuta.app.data.DiaMinuta
+import com.miniminuta.app.data.NivelCalorico
 import com.miniminuta.app.data.RecetasRepository
+import com.miniminuta.app.data.nivelCalorico
+import com.miniminuta.app.data.promedioCalorias
+import com.miniminuta.app.data.promedioMinutos
 import com.miniminuta.app.ui.components.TarjetaReceta
 import com.miniminuta.app.ui.theme.MiniMinutaTheme
 
@@ -116,17 +121,13 @@ private fun ResumenSemana(
     minuta: List<DiaMinuta>,
     modifier: Modifier = Modifier
 ) {
+    // Todo el resumen se calcula con operaciones de colección sobre la minuta.
     val recetas = minuta.map { it.receta }
-    val promedioCalorias = if (recetas.isEmpty()) {
-        0
-    } else {
-        recetas.sumOf { it.nutricion.calorias } / recetas.size
-    }
-    val tiempoPromedio = if (recetas.isEmpty()) {
-        0
-    } else {
-        recetas.sumOf { it.tiempoMinutos } / recetas.size
-    }
+    val promedioCalorias = recetas.promedioCalorias()
+    val tiempoPromedio = recetas.promedioMinutos()
+    val masRapida = recetas.minByOrNull { it.tiempoMinutos }
+    val livianas = recetas.count { it.nivelCalorico() == NivelCalorico.LIVIANA }
+    val distintas = recetas.distinctBy { it.id }.size
 
     Card(
         colors = CardDefaults.cardColors(
@@ -152,6 +153,28 @@ private fun ResumenSemana(
                 DatoResumen(valor = "$promedioCalorias", etiqueta = "kcal promedio")
                 DatoResumen(valor = "$tiempoPromedio min", etiqueta = "de preparación")
             }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSecondaryContainer)
+
+            Text(
+                text = buildString {
+                    append("$livianas de ${minuta.size} son recetas livianas")
+                    if (distintas < minuta.size) {
+                        append(" y repites ${minuta.size - distintas}")
+                    }
+                    append(".")
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+
+            // El operador ?. junto con ?: evita tener que comprobar el nulo aparte.
+            Text(
+                text = masRapida?.let { "La más rápida es ${it.nombre}, ${it.tiempoMinutos} min." }
+                    ?: "Todavía no hay recetas en la minuta.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
         }
     }
 }

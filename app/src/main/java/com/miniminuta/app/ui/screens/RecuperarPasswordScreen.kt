@@ -126,6 +126,7 @@ fun RecuperarPasswordScreen(
                 GrillaSeleccionUnica(
                     opciones = MEDIOS_ENVIO,
                     seleccionada = medioElegido,
+                    etiqueta = { it },
                     onSelecciona = { medioElegido = it }
                 )
 

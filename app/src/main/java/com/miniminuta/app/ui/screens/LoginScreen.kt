@@ -180,6 +180,13 @@ fun LoginScreen(
 
                 TituloSeccion("Datos de prueba")
 
+                Text(
+                    text = "Solo para la revisión de esta entrega. Una aplicación real " +
+                        "nunca debe mostrar contraseñas en pantalla.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
                 TablaDatos(
                     encabezadoIzquierdo = "Dato",
                     encabezadoDerecho = "Valor",
