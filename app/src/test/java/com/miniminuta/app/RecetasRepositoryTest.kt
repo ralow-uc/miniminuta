@@ -1,5 +1,6 @@
 package com.miniminuta.app
 
+import com.miniminuta.app.data.DiaSemana
 import com.miniminuta.app.data.RecetasRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -16,7 +17,7 @@ class RecetasRepositoryTest {
     fun `la minuta inicial tiene cinco recetas, una por dia`() {
         val minuta = RecetasRepository.obtenerMinutaInicial()
         assertEquals(5, minuta.size)
-        assertEquals(RecetasRepository.DIAS, minuta.map { it.dia })
+        assertEquals(DiaSemana.entries, minuta.map { it.dia })
     }
 
     @Test
