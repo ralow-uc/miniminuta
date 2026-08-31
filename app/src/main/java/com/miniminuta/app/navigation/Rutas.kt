@@ -1,6 +1,6 @@
 package com.miniminuta.app.navigation
 
-import android.net.Uri
+import com.miniminuta.app.data.DiaSemana
 
 /**
  * Rutas de navegación de la aplicación.
@@ -16,7 +16,11 @@ object Rutas {
     const val SELECCION = "seleccion/{dia}"
     const val ARG_DIA = "dia"
 
-    fun detalleDe(dia: String): String = "detalle/${Uri.encode(dia)}"
+    /**
+     * El día viaja como el nombre del enum, que no lleva tildes ni espacios y
+     * por lo tanto no necesita escaparse en la ruta.
+     */
+    fun detalleDe(dia: DiaSemana): String = "detalle/${dia.name}"
 
-    fun seleccionDe(dia: String): String = "seleccion/${Uri.encode(dia)}"
+    fun seleccionDe(dia: DiaSemana): String = "seleccion/${dia.name}"
 }

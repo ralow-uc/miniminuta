@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.miniminuta.app.data.DiaSemana
 import com.miniminuta.app.ui.MinutaViewModel
 import com.miniminuta.app.ui.screens.DetalleRecetaScreen
 import com.miniminuta.app.ui.screens.LoginScreen
@@ -87,7 +88,7 @@ fun AppNavGraph(
             route = Rutas.DETALLE,
             arguments = listOf(navArgument(Rutas.ARG_DIA) { type = NavType.StringType })
         ) { entradaPila ->
-            val dia = entradaPila.arguments?.getString(Rutas.ARG_DIA).orEmpty()
+            val dia = DiaSemana.desdeNombre(entradaPila.arguments?.getString(Rutas.ARG_DIA))
             val diaMinuta = minutaViewModel.obtenerDia(dia)
             if (diaMinuta == null) {
                 // Si el día no existe se vuelve a la minuta en vez de dejar la
@@ -97,7 +98,7 @@ fun AppNavGraph(
                 DetalleRecetaScreen(
                     diaMinuta = diaMinuta,
                     onVolver = { navController.popBackStack() },
-                    onCambiarReceta = { navController.navigate(Rutas.seleccionDe(dia)) }
+                    onCambiarReceta = { navController.navigate(Rutas.seleccionDe(diaMinuta.dia)) }
                 )
             }
         }
@@ -106,18 +107,18 @@ fun AppNavGraph(
             route = Rutas.SELECCION,
             arguments = listOf(navArgument(Rutas.ARG_DIA) { type = NavType.StringType })
         ) { entradaPila ->
-            val dia = entradaPila.arguments?.getString(Rutas.ARG_DIA).orEmpty()
+            val dia = DiaSemana.desdeNombre(entradaPila.arguments?.getString(Rutas.ARG_DIA))
             val diaMinuta = minutaViewModel.obtenerDia(dia)
             if (diaMinuta == null) {
                 navController.popBackStack()
             } else {
                 SeleccionRecetaScreen(
-                    dia = dia,
+                    dia = diaMinuta.dia,
                     catalogo = minutaViewModel.catalogo,
                     recetaActualId = diaMinuta.receta.id,
                     anchoPantalla = anchoPantalla,
                     onConfirmar = { recetaId ->
-                        minutaViewModel.cambiarReceta(dia = dia, recetaId = recetaId)
+                        minutaViewModel.cambiarReceta(dia = diaMinuta.dia, recetaId = recetaId)
                         navController.popBackStack()
                     },
                     onVolver = { navController.popBackStack() }

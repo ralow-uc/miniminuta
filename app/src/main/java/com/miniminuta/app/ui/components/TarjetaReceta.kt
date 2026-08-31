@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.miniminuta.app.data.DiaMinuta
+import com.miniminuta.app.data.DiaSemana
 
 /**
  * Tarjeta de un día de la minuta dentro de la grilla.
@@ -105,7 +106,7 @@ fun TarjetaReceta(
                 modifier = Modifier.size(22.dp)
             )
             Text(
-                text = "Cambiar receta del ${diaMinuta.dia.lowercase()}",
+                text = "Cambiar receta del ${diaMinuta.dia.etiqueta.lowercase()}",
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(start = 8.dp)
             )
@@ -116,7 +117,7 @@ fun TarjetaReceta(
 /** Pastilla con el día de la semana. */
 @Composable
 fun EtiquetaDia(
-    dia: String,
+    dia: DiaSemana,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -127,7 +128,7 @@ fun EtiquetaDia(
         modifier = modifier
     ) {
         Text(
-            text = dia.uppercase(),
+            text = dia.etiqueta.uppercase(),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)

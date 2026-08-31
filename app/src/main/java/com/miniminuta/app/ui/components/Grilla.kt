@@ -164,14 +164,15 @@ fun GrillaSeleccionMultiple(
 /**
  * Grilla de dos columnas donde solo se puede elegir una opción.
  *
- * Presenta los radio buttons como tarjetas grandes, más fáciles de tocar que
- * una lista de círculos pequeños.
+ * Es genérica para poder trabajar con enums en lugar de cadenas de texto: la
+ * comparación se hace sobre el valor y no sobre cómo esté escrita la etiqueta.
  */
 @Composable
-fun GrillaSeleccionUnica(
-    opciones: List<String>,
-    seleccionada: String,
-    onSelecciona: (String) -> Unit,
+fun <T> GrillaSeleccionUnica(
+    opciones: List<T>,
+    seleccionada: T,
+    etiqueta: (T) -> String,
+    onSelecciona: (T) -> Unit,
     modifier: Modifier = Modifier
 ) {
     GrillaDeDosColumnas(cantidad = opciones.size, modifier = modifier) { indice ->
@@ -208,7 +209,7 @@ fun GrillaSeleccionUnica(
             ) {
                 RadioButton(selected = elegida, onClick = null)
                 Text(
-                    text = opcion,
+                    text = etiqueta(opcion),
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(start = 6.dp)
                 )
