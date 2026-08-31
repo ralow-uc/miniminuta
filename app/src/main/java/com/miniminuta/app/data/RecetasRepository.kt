@@ -13,9 +13,6 @@ package com.miniminuta.app.data
  */
 object RecetasRepository {
 
-    /** Días que componen la minuta semanal. */
-    val DIAS = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes")
-
     private val catalogo: Array<Receta> = arrayOf(
         Receta(
             id = 1,
@@ -344,9 +341,16 @@ object RecetasRepository {
     /** Catálogo completo de recetas disponibles para elegir. */
     fun obtenerCatalogo(): List<Receta> = catalogo.toList()
 
-    /** Minuta semanal por omisión, con una receta asignada a cada día. */
+    /**
+     * Minuta semanal por omisión, con una receta asignada a cada día.
+     *
+     * Recorre los días del enum y los empareja con el arreglo inicial usando
+     * mapIndexed, de modo que ambos conjuntos queden alineados por posición.
+     */
     fun obtenerMinutaInicial(): List<DiaMinuta> =
-        DIAS.mapIndexed { indice, dia -> DiaMinuta(dia = dia, receta = minutaInicial[indice]) }
+        DiaSemana.entries.mapIndexed { indice, dia ->
+            DiaMinuta(dia = dia, receta = minutaInicial[indice])
+        }
 
     /** Busca una receta del catálogo por su identificador. Devuelve null si no existe. */
     fun obtenerPorId(id: Int): Receta? = catalogo.firstOrNull { it.id == id }
