@@ -70,6 +70,47 @@ pide la actividad:
 Además, la vista Minuta y la de Elegir receta usan grillas (`LazyVerticalGrid`)
 y la vista Detalle de receta usa una tabla para la información nutricional.
 
+## Sintaxis de Kotlin aplicada
+
+La semana 3 pide identificar y aplicar la sintaxis de Kotlin sobre esta
+aplicación. Estos son los elementos usados y dónde encontrarlos.
+
+| Elemento de Kotlin | Dónde se usa |
+|---|---|
+| `enum class` | `DiaSemana`, `NivelCalorico` y `OrdenCatalogo` en `data/Receta.kt` |
+| `data class` | `Receta`, `InfoNutricional` y `DiaMinuta` |
+| `val` y `var` | `val` para el catálogo y las recetas; `var` para el estado de las pantallas |
+| Funciones de extensión | `buscar`, `ordenarPor`, `nivelCalorico`, `seCocinaEn`, `promedioCalorias` |
+| Funciones de una expresión | Casi todas las extensiones, con `=` en lugar de cuerpo |
+| Funciones de orden superior | `filter`, `map`, `sortedBy`, `count` reciben lambdas |
+| `when` con rangos | `nivelCalorico()` clasifica según `in 0..399` |
+| `when` exhaustivo | `ordenarPor()` cubre los tres criterios sin `else` |
+| Seguridad nula | `Receta?`, `DiaSemana?`, operadores `?.`, `?:` y `?.let` |
+| Propiedad calculada | `InfoNutricional.totalMacros` con `get()` |
+| Genéricos | `GrillaSeleccionUnica<T>` trabaja con enums y con cadenas |
+| `companion object` | `DiaSemana.desdeNombre()` |
+
+### Colecciones
+
+El resumen semanal y el catálogo se resuelven completos con la biblioteca de
+colecciones, sin bucles manuales:
+
+```kotlin
+catalogo.buscar(texto).ordenarPor(criterio)   // filtrar y ordenar encadenados
+recetas.sumOf { it.nutricion.calorias }       // total de calorías
+recetas.minByOrNull { it.tiempoMinutos }      // la más rápida, o null
+recetas.count { it.nivelCalorico() == LIVIANA }
+recetas.distinctBy { it.id }                  // cuántas no se repiten
+DiaSemana.entries.mapIndexed { i, dia -> ... } // arma la minuta inicial
+```
+
+## Buscar y ordenar el catálogo
+
+La pantalla para elegir receta permite buscar por nombre, descripción o
+ingrediente, y ordenar por nombre, calorías o tiempo de preparación. Ambas
+operaciones se apoyan en funciones de extensión sobre `List<Receta>`, de modo
+que la pantalla solo mantiene el texto y el criterio elegido.
+
 ## Minuta editable
 
 La minuta no es fija. Cada día tiene un botón para cambiar la receta, que abre
@@ -96,7 +137,7 @@ y todas las pantallas admiten desplazamiento vertical.
 ```
 app/src/main/java/com/miniminuta/app/
 ├── MainActivity.kt          Actividad única, aplica el tema y calcula el tamaño de ventana
-├── data/                    Modelo de receta, catálogo y minuta semanal inicial
+├── data/                    Modelo, enums, catálogo y funciones de colección
 ├── navigation/              Rutas y grafo de navegación
 ├── ui/MinutaViewModel.kt    Estado de la minuta y cambio de receta por día
 ├── ui/components/           Componentes reutilizables de interfaz
