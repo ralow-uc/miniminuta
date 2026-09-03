@@ -1,5 +1,6 @@
 package com.miniminuta.app
 
+import com.miniminuta.app.data.Cuenta
 import com.miniminuta.app.data.DiaSemana
 import com.miniminuta.app.data.RecetasRepository
 import com.miniminuta.app.ui.MinutaViewModel
@@ -95,6 +96,44 @@ class MinutaViewModelTest {
 
         assertEquals(7, viewModel.obtenerDia(DiaSemana.LUNES)!!.receta.id)
         assertEquals(7, viewModel.obtenerDia(DiaSemana.JUEVES)!!.receta.id)
+    }
+
+    @Test
+    fun `la sesion guarda la cuenta y el saludo cambia con ella`() {
+        val viewModel = MinutaViewModel()
+        assertEquals("Hola", viewModel.saludo())
+
+        viewModel.iniciarSesion(Cuenta(nombre = "Ana", email = "ana@correo.com", password = "clave"))
+
+        assertEquals("Hola Ana", viewModel.saludo())
+    }
+
+    @Test
+    fun `cerrar sesion olvida la cuenta y restaura la minuta`() {
+        val viewModel = MinutaViewModel()
+        viewModel.iniciarSesion(Cuenta(nombre = "Ana", email = "ana@correo.com", password = "clave"))
+        viewModel.cambiarReceta(dia = DiaSemana.LUNES, recetaId = 9)
+
+        viewModel.cerrarSesion()
+
+        assertNull(viewModel.cuenta)
+        assertEquals(
+            RecetasRepository.obtenerMinutaInicial().map { it.receta.id },
+            viewModel.minuta.map { it.receta.id }
+        )
+    }
+
+    @Test
+    fun `el mapa por nivel calorico reparte las cinco recetas`() {
+        val viewModel = MinutaViewModel()
+
+        val porNivel = viewModel.recetasPorNivel()
+
+        assertEquals(5, porNivel.values.sumOf { it.size })
+        assertEquals(
+            viewModel.minuta.map { it.receta.id }.toSet(),
+            porNivel.values.flatten().map { it.id }.toSet()
+        )
     }
 
     @Test

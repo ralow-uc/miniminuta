@@ -41,7 +41,8 @@ fun AppNavGraph(
     ) {
         composable(Rutas.LOGIN) {
             LoginScreen(
-                onIngresar = {
+                onIngresar = { cuenta ->
+                    minutaViewModel.iniciarSesion(cuenta)
                     navController.navigate(Rutas.MINUTA) {
                         // El login queda fuera de la pila para que el botón atrás
                         // no devuelva al formulario una vez dentro.
@@ -69,6 +70,8 @@ fun AppNavGraph(
         composable(Rutas.MINUTA) {
             MinutaScreen(
                 minuta = minutaViewModel.minuta,
+                saludo = minutaViewModel.saludo(),
+                tipoDeCuenta = minutaViewModel.descripcionCuenta(),
                 anchoPantalla = anchoPantalla,
                 onVerReceta = { diaMinuta ->
                     navController.navigate(Rutas.detalleDe(diaMinuta.dia))
@@ -77,6 +80,7 @@ fun AppNavGraph(
                     navController.navigate(Rutas.seleccionDe(diaMinuta.dia))
                 },
                 onCerrarSesion = {
+                    minutaViewModel.cerrarSesion()
                     navController.navigate(Rutas.LOGIN) {
                         popUpTo(Rutas.MINUTA) { inclusive = true }
                     }

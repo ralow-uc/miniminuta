@@ -4,10 +4,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.miniminuta.app.data.Cuenta
 import com.miniminuta.app.data.DiaMinuta
-import com.miniminuta.app.data.Receta
 import com.miniminuta.app.data.DiaSemana
+import com.miniminuta.app.data.NivelCalorico
+import com.miniminuta.app.data.Receta
 import com.miniminuta.app.data.RecetasRepository
+import com.miniminuta.app.data.nivelCalorico
 import com.miniminuta.app.data.promedioCalorias
 import com.miniminuta.app.data.promedioMinutos
 
@@ -26,6 +29,33 @@ class MinutaViewModel : ViewModel() {
 
     /** Catálogo completo entre el que se puede elegir. */
     val catalogo: List<Receta> = RecetasRepository.obtenerCatalogo()
+
+    /** Cuenta que tiene la sesión abierta, o null si nadie ingresó todavía. */
+    var cuenta by mutableStateOf<Cuenta?>(null)
+        private set
+
+    /** Guarda la cuenta que acaba de autenticarse en el login. */
+    fun iniciarSesion(cuenta: Cuenta) {
+        this.cuenta = cuenta
+    }
+
+    /**
+     * Cierra la sesión y devuelve la minuta a su estado inicial, para que la
+     * siguiente persona no herede los cambios de la anterior.
+     */
+    fun cerrarSesion() {
+        cuenta = null
+        restaurarMinuta()
+    }
+
+    /**
+     * Saludo que encabeza la minuta. Cada tipo de cuenta responde distinto,
+     * porque saludo() está sobrescrito en la cuenta registrada.
+     */
+    fun saludo(): String = cuenta?.saludo() ?: "Hola"
+
+    /** Tipo de cuenta con la sesión abierta, que cada subclase describe a su manera. */
+    fun descripcionCuenta(): String = cuenta?.descripcion.orEmpty()
 
     /**
      * Reemplaza la receta de un día por otra del catálogo.
@@ -58,6 +88,15 @@ class MinutaViewModel : ViewModel() {
 
     /** Receta con más calorías de la semana, o null si la minuta está vacía. */
     fun recetaMasCalorica(): Receta? = recetasDeLaSemana.maxByOrNull { it.nutricion.calorias }
+
+    /**
+     * Agrupa las recetas de la semana por carga calórica.
+     *
+     * groupBy devuelve un mapa donde la clave es el nivel y el valor la lista
+     * de recetas que caen en él.
+     */
+    fun recetasPorNivel(): Map<NivelCalorico, List<Receta>> =
+        recetasDeLaSemana.groupBy { it.nivelCalorico() }
 
     /** Cuántas recetas distintas hay en la semana. */
     fun recetasDistintas(): Int = recetasDeLaSemana.distinctBy { it.id }.size

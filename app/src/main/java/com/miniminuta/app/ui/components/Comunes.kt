@@ -1,5 +1,8 @@
 package com.miniminuta.app.ui.components
 
+import android.net.ConnectivityManager
+import android.net.Network
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -23,6 +27,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +45,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.miniminuta.app.util.hayConexion
 
 /** Alto mínimo de los elementos tocables, pensado para dedos poco precisos. */
 val AltoTactil = 60.dp
@@ -262,6 +269,69 @@ fun FilaDato(
             text = valor,
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+/**
+ * Observa la conexión a internet del dispositivo mientras la pantalla esté visible.
+ *
+ * Parte con el estado actual y después se suscribe al sistema para enterarse de
+ * los cambios. DisposableEffect garantiza que la suscripción se cancele cuando
+ * la pantalla desaparece, para no dejar al sistema avisando a una pantalla que
+ * ya no existe.
+ */
+@Composable
+fun recordarEstadoConexion(): Boolean {
+    val contexto = LocalContext.current
+    var conectado by remember { mutableStateOf(hayConexion(contexto)) }
+
+    DisposableEffect(contexto) {
+        val gestor = contexto.getSystemService(ConnectivityManager::class.java)
+        val observador = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(red: Network) {
+                conectado = true
+            }
+
+            override fun onLost(red: Network) {
+                conectado = hayConexion(contexto)
+            }
+        }
+        gestor?.registerDefaultNetworkCallback(observador)
+        onDispose { gestor?.unregisterNetworkCallback(observador) }
+    }
+
+    return conectado
+}
+
+/**
+ * Aviso de que el dispositivo quedó sin internet.
+ *
+ * Quien lo usa decide cuándo mostrarlo, de manera que en la situación normal no
+ * ocupe espacio ni deje un hueco en la pantalla.
+ */
+@Composable
+fun AvisoSinConexion(modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.errorContainer,
+                shape = MaterialTheme.shapes.medium
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.CloudOff,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onErrorContainer
+        )
+        Text(
+            text = "Sin conexión a internet. Puedes seguir usando tus recetas guardadas.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier.padding(start = 12.dp)
         )
     }
 }

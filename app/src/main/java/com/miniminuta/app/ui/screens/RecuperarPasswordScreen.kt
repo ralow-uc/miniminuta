@@ -35,6 +35,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.miniminuta.app.data.CuentasRepository
 import com.miniminuta.app.ui.components.AnchoMaximoFormulario
 import com.miniminuta.app.ui.components.BotonPrimario
 import com.miniminuta.app.ui.components.CampoTexto
@@ -65,7 +66,15 @@ fun RecuperarPasswordScreen(
     var intentoEnvio by rememberSaveable { mutableStateOf(false) }
     var mostrarConfirmacion by rememberSaveable { mutableStateOf(false) }
 
-    val errorEmail = if (intentoEnvio) Validaciones.errorEmail(email) else null
+    // La cuenta se busca en el repositorio para no prometer un envío a un
+    // correo que nadie registró.
+    val cuenta = CuentasRepository.buscarPorEmail(email)
+    val errorEmail = when {
+        !intentoEnvio -> null
+        Validaciones.errorEmail(email) != null -> Validaciones.errorEmail(email)
+        cuenta == null -> "No encontramos una cuenta con ese correo"
+        else -> null
+    }
 
     Scaffold(
         topBar = {
@@ -147,7 +156,7 @@ fun RecuperarPasswordScreen(
                     icono = Icons.AutoMirrored.Filled.Send,
                     onClick = {
                         intentoEnvio = true
-                        if (Validaciones.errorEmail(email) == null) {
+                        if (Validaciones.errorEmail(email) == null && cuenta != null) {
                             mostrarConfirmacion = true
                         }
                     }
@@ -168,8 +177,9 @@ fun RecuperarPasswordScreen(
             title = { Text("Instrucciones enviadas") },
             text = {
                 Text(
-                    text = "Enviamos los pasos a ${email.trim()} " +
-                        "(${medioElegido.lowercase()}). Revisa tu bandeja de entrada.",
+                    text = "Listo ${cuenta?.nombre.orEmpty()}, enviamos los pasos a " +
+                        "${email.trim()} (${medioElegido.lowercase()}). " +
+                        "Revisa tu bandeja de entrada.",
                     style = MaterialTheme.typography.bodyLarge
                 )
             },

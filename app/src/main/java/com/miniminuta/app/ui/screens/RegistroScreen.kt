@@ -51,6 +51,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.miniminuta.app.data.CuentasRepository
+import com.miniminuta.app.data.ResultadoRegistro
 import com.miniminuta.app.ui.components.AnchoMaximoFormulario
 import com.miniminuta.app.ui.components.BotonPrimario
 import com.miniminuta.app.ui.components.CampoTexto
@@ -335,7 +337,25 @@ fun RegistroScreen(
                                 )
                             }
 
-                            else -> mostrarExito = true
+                            else -> {
+                                // El registro deja la cuenta disponible para
+                                // iniciar sesión, salvo que el correo ya exista.
+                                val resultado = CuentasRepository.registrar(
+                                    nombre = nombre,
+                                    email = email,
+                                    password = password,
+                                    tipoDieta = tipoDieta,
+                                    restricciones = restriccionesElegidas
+                                )
+                                when (resultado) {
+                                    is ResultadoRegistro.Creada -> mostrarExito = true
+                                    ResultadoRegistro.CorreoRepetido -> scope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            "Ese correo ya tiene una cuenta creada."
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 )
@@ -355,8 +375,8 @@ fun RegistroScreen(
             title = { Text("Cuenta creada") },
             text = {
                 Text(
-                    text = "Listo $nombre, tu cuenta quedó registrada. " +
-                        "Ahora puedes ingresar con tu correo.",
+                    text = "Listo ${nombre.trim()}, tu cuenta quedó registrada. " +
+                        "Ahora puedes ingresar con ${email.trim()} y tu contraseña.",
                     style = MaterialTheme.typography.bodyLarge
                 )
             },

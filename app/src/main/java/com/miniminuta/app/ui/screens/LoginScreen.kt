@@ -31,26 +31,28 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.miniminuta.app.data.Cuenta
+import com.miniminuta.app.data.CuentasRepository
 import com.miniminuta.app.ui.components.AnchoMaximoFormulario
+import com.miniminuta.app.ui.components.AvisoSinConexion
 import com.miniminuta.app.ui.components.BotonPrimario
 import com.miniminuta.app.ui.components.CampoTexto
 import com.miniminuta.app.ui.components.EncabezadoApp
 import com.miniminuta.app.ui.components.GrillaInformativa
 import com.miniminuta.app.ui.components.ItemInformativo
 import com.miniminuta.app.ui.components.TablaDatos
-import com.miniminuta.app.ui.components.Vinculo
-import com.miniminuta.app.ui.theme.MiniMinutaTheme
 import com.miniminuta.app.ui.components.TituloSeccion
+import com.miniminuta.app.ui.components.Vinculo
+import com.miniminuta.app.ui.components.recordarEstadoConexion
+import com.miniminuta.app.ui.theme.MiniMinutaTheme
+import com.miniminuta.app.util.PreferenciasUsuario
 import com.miniminuta.app.util.Validaciones
 import kotlinx.coroutines.launch
-
-/** Credenciales de demostración, ya que esta entrega no contempla servidor. */
-private const val EMAIL_DEMO = "maria@correo.com"
-private const val PASSWORD_DEMO = "minuta123"
 
 /** Contenido de la grilla de bienvenida que se muestra bajo el formulario. */
 private val BENEFICIOS = listOf(
@@ -68,18 +70,23 @@ private val BENEFICIOS = listOf(
  */
 @Composable
 fun LoginScreen(
-    onIngresar: () -> Unit,
+    onIngresar: (Cuenta) -> Unit,
     onIrARegistro: () -> Unit,
     onIrARecuperar: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var email by rememberSaveable { mutableStateOf("") }
+    val contexto = LocalContext.current
+    val preferencias = remember(contexto) { PreferenciasUsuario(contexto) }
+    val correoGuardado = remember(preferencias) { preferencias.correoRecordado }
+
+    var email by rememberSaveable { mutableStateOf(correoGuardado) }
     var password by rememberSaveable { mutableStateOf("") }
-    var recordarCorreo by rememberSaveable { mutableStateOf(false) }
+    var recordarCorreo by rememberSaveable { mutableStateOf(correoGuardado.isNotEmpty()) }
     var intentoEnvio by rememberSaveable { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val conectado = recordarEstadoConexion()
 
     val errorEmail = if (intentoEnvio) Validaciones.errorEmail(email) else null
     val errorPassword = if (intentoEnvio) Validaciones.errorPassword(password) else null
@@ -104,6 +111,10 @@ fun LoginScreen(
                     titulo = "MiniMinuta",
                     subtitulo = "Tu minuta de recetas para toda la semana"
                 )
+
+                if (!conectado) {
+                    AvisoSinConexion()
+                }
 
                 Spacer(Modifier.height(4.dp))
 
@@ -148,10 +159,18 @@ fun LoginScreen(
                         intentoEnvio = true
                         val datosCorrectos = Validaciones.errorEmail(email) == null &&
                             Validaciones.errorPassword(password) == null
+                        // La cuenta queda en null si el correo no existe o la clave no calza.
+                        val cuenta = CuentasRepository.autenticar(email, password)
                         when {
                             !datosCorrectos -> Unit
-                            email.trim().equals(EMAIL_DEMO, ignoreCase = true) &&
-                                password == PASSWORD_DEMO -> onIngresar()
+                            cuenta != null -> {
+                                if (recordarCorreo) {
+                                    preferencias.correoRecordado = email.trim()
+                                } else {
+                                    preferencias.olvidarCorreo()
+                                }
+                                onIngresar(cuenta)
+                            }
 
                             else -> scope.launch {
                                 snackbarHostState.showSnackbar(
@@ -187,13 +206,13 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
+                // El mapa de credenciales se recorre para armar las filas de la tabla.
                 TablaDatos(
-                    encabezadoIzquierdo = "Dato",
-                    encabezadoDerecho = "Valor",
-                    filas = listOf(
-                        "Correo" to EMAIL_DEMO,
-                        "Contraseña" to PASSWORD_DEMO
-                    )
+                    encabezadoIzquierdo = "Correo",
+                    encabezadoDerecho = "Contraseña",
+                    filas = CuentasRepository.credencialesDePrueba().map { (correo, clave) ->
+                        correo to clave
+                    }
                 )
             }
         }

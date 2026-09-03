@@ -37,7 +37,9 @@ import com.miniminuta.app.data.RecetasRepository
 import com.miniminuta.app.data.nivelCalorico
 import com.miniminuta.app.data.promedioCalorias
 import com.miniminuta.app.data.promedioMinutos
+import com.miniminuta.app.ui.components.AvisoSinConexion
 import com.miniminuta.app.ui.components.TarjetaReceta
+import com.miniminuta.app.ui.components.recordarEstadoConexion
 import com.miniminuta.app.ui.theme.MiniMinutaTheme
 
 /**
@@ -50,6 +52,8 @@ import com.miniminuta.app.ui.theme.MiniMinutaTheme
 @Composable
 fun MinutaScreen(
     minuta: List<DiaMinuta>,
+    saludo: String,
+    tipoDeCuenta: String,
     anchoPantalla: WindowWidthSizeClass,
     onVerReceta: (DiaMinuta) -> Unit,
     onCambiarReceta: (DiaMinuta) -> Unit,
@@ -57,6 +61,7 @@ fun MinutaScreen(
     modifier: Modifier = Modifier
 ) {
     val columnas = if (anchoPantalla == WindowWidthSizeClass.Compact) 1 else 2
+    val conectado = recordarEstadoConexion()
 
     Scaffold(
         topBar = {
@@ -87,8 +92,14 @@ fun MinutaScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            if (!conectado) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    AvisoSinConexion()
+                }
+            }
+
             item(span = { GridItemSpan(maxLineSpan) }) {
-                ResumenSemana(minuta = minuta)
+                ResumenSemana(minuta = minuta, saludo = saludo, tipoDeCuenta = tipoDeCuenta)
             }
 
             items(items = minuta, key = { it.dia }) { diaMinuta ->
@@ -119,6 +130,8 @@ fun MinutaScreen(
 @Composable
 private fun ResumenSemana(
     minuta: List<DiaMinuta>,
+    saludo: String,
+    tipoDeCuenta: String,
     modifier: Modifier = Modifier
 ) {
     // Todo el resumen se calcula con operaciones de colección sobre la minuta.
@@ -128,6 +141,9 @@ private fun ResumenSemana(
     val masRapida = recetas.minByOrNull { it.tiempoMinutos }
     val livianas = recetas.count { it.nivelCalorico() == NivelCalorico.LIVIANA }
     val distintas = recetas.distinctBy { it.id }.size
+    // groupBy arma un mapa de nivel calórico a recetas, que se recorre para
+    // escribir el reparto de la semana en una sola línea.
+    val porNivel = recetas.groupBy { it.nivelCalorico() }
 
     Card(
         colors = CardDefaults.cardColors(
@@ -140,11 +156,18 @@ private fun ResumenSemana(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = "Tu semana está lista",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = saludo,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = tipoDeCuenta,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -164,6 +187,16 @@ private fun ResumenSemana(
                     }
                     append(".")
                 },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+
+            Text(
+                text = NivelCalorico.entries
+                    .filter { porNivel.containsKey(it) }
+                    .joinToString(" · ") { nivel ->
+                        "${nivel.etiqueta}: ${porNivel.getValue(nivel).size}"
+                    },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSecondaryContainer
             )
@@ -208,6 +241,8 @@ private fun MinutaScreenPreview() {
     MiniMinutaTheme {
         MinutaScreen(
             minuta = RecetasRepository.obtenerMinutaInicial(),
+            saludo = "Hola María",
+            tipoDeCuenta = "Cuenta de demostración",
             anchoPantalla = WindowWidthSizeClass.Compact,
             onVerReceta = {},
             onCambiarReceta = {},
